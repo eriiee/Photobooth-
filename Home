@@ -3,24 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vintage Photobooth</title>
+    <title>White-Themed Vintage Photobooth</title>
     <style>
         body {
             text-align: center;
-            background: #f4e4c1;
+            background: #ffffff;
             font-family: 'Courier New', Courier, monospace;
+            color: black;
         }
         .container {
-            margin-top: 50px;
+            margin-top: 30px;
         }
         video, canvas {
-            border: 10px solid #6b4f4f;
-            filter: sepia(80%);
+            border: 5px solid black;
             width: 80%;
-            max-width: 500px;
+            max-width: 400px;
+        }
+        .photo-strip {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #eee;
+            border: 10px solid black;
+            padding: 10px;
+            width: 220px;
+        }
+        .photo-strip canvas {
+            width: 200px;
+            height: 250px;
+            background: white;
+            margin: 5px 0;
         }
         button {
-            background: #6b4f4f;
+            background: black;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -34,13 +49,13 @@
     <div class="container">
         <h1>Vintage Photobooth</h1>
         <video id="video" autoplay playsinline></video>
-        <canvas id="canvas1" style="display:none;"></canvas>
-        <canvas id="canvas2" style="display:none;"></canvas>
-        <canvas id="canvas3" style="display:none;"></canvas>
-        <br>
+        <div class="photo-strip">
+            <canvas id="canvas1"></canvas>
+            <canvas id="canvas2"></canvas>
+            <canvas id="canvas3"></canvas>
+        </div>
         <button id="snap">Take Photos</button>
-        <button id="download" style="display:none;">Download All</button>
-        <p id="error-message" style="color:red; display:none;">Camera access denied. Please allow camera permissions.</p>
+        <button id="download" style="display:none;">Download Strip</button>
     </div>
     <script>
         const video = document.getElementById('video');
@@ -51,41 +66,41 @@
         ];
         const snap = document.getElementById('snap');
         const download = document.getElementById('download');
-        const errorMessage = document.getElementById('error-message');
         
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
             .then(stream => { video.srcObject = stream; })
             .catch(err => {
-                console.error("Camera access denied", err);
-                errorMessage.style.display = 'block';
+                alert("Camera access denied. Please allow camera permissions.");
             });
         
         snap.addEventListener('click', () => {
             if (!video.srcObject) {
-                errorMessage.style.display = 'block';
+                alert("Camera not available.");
                 return;
             }
             canvases.forEach((canvas, index) => {
                 setTimeout(() => {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
+                    canvas.width = 200;
+                    canvas.height = 250;
                     const ctx = canvas.getContext('2d');
-                    ctx.drawImage(video, 0, 0);
-                    canvas.style.display = 'block';
+                    ctx.drawImage(video, 0, 0, 200, 250);
                 }, index * 1000);
             });
-            video.style.display = 'none';
-            snap.style.display = 'none';
             setTimeout(() => { download.style.display = 'inline'; }, 3000);
         });
         
         download.addEventListener('click', () => {
+            const strip = document.createElement('canvas');
+            strip.width = 200;
+            strip.height = 750;
+            const ctx = strip.getContext('2d');
             canvases.forEach((canvas, index) => {
-                const link = document.createElement('a');
-                link.href = canvas.toDataURL('image/png');
-                link.download = `vintage-photo-${index + 1}.png`;
-                link.click();
+                ctx.drawImage(canvas, 0, index * 250, 200, 250);
             });
+            const link = document.createElement('a');
+            link.href = strip.toDataURL('image/png');
+            link.download = 'photo-strip.png';
+            link.click();
         });
     </script>
 </body>
