@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vintage Photobooth</title>
+    <style>
+        body {
+            text-align: center;
+            background: #f4e4c1;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        video, canvas {
+            border: 10px solid #6b4f4f;
+            filter: sepia(80%);
+            width: 80%;
+            max-width: 500px;
+        }
+        button {
+            background: #6b4f4f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 18px;
+            margin: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Vintage Photobooth</h1>
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas1" style="display:none;"></canvas>
+        <canvas id="canvas2" style="display:none;"></canvas>
+        <canvas id="canvas3" style="display:none;"></canvas>
+        <br>
+        <button id="snap">Take Photos</button>
+        <button id="download" style="display:none;">Download All</button>
+        <p id="error-message" style="color:red; display:none;">Camera access denied. Please allow camera permissions.</p>
+    </div>
+    <script>
+        const video = document.getElementById('video');
+        const canvases = [
+            document.getElementById('canvas1'),
+            document.getElementById('canvas2'),
+            document.getElementById('canvas3')
+        ];
+        const snap = document.getElementById('snap');
+        const download = document.getElementById('download');
+        const errorMessage = document.getElementById('error-message');
+        
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+            .then(stream => { video.srcObject = stream; })
+            .catch(err => {
+                console.error("Camera access denied", err);
+                errorMessage.style.display = 'block';
+            });
+        
+        snap.addEventListener('click', () => {
+            if (!video.srcObject) {
+                errorMessage.style.display = 'block';
+                return;
+            }
+            canvases.forEach((canvas, index) => {
+                setTimeout(() => {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0);
+                    canvas.style.display = 'block';
+                }, index * 1000);
+            });
+            video.style.display = 'none';
+            snap.style.display = 'none';
+            setTimeout(() => { download.style.display = 'inline'; }, 3000);
+        });
+        
+        download.addEventListener('click', () => {
+            canvases.forEach((canvas, index) => {
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = `vintage-photo-${index + 1}.png`;
+                link.click();
+            });
+        });
+    </script>
+</body>
+</html>
